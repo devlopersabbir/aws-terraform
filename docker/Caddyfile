@@ -1,0 +1,33 @@
+# 1. Frontend Domain Configuration
+{$APP_DOMAIN} {
+    # Reverse proxy to Next.js / React frontend container
+    reverse_proxy frontend:3000
+
+    # Enable compression for text assets
+    encode gzip zstd
+
+    # Logging config
+    log {
+        output file /var/log/caddy/frontend_access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# 2. API / Backend Domain Configuration
+{$API_DOMAIN} {
+    # Reverse proxy to NestJS backend container
+    reverse_proxy backend:3000
+
+    # Enable compression
+    encode gzip zstd
+
+    # Logging config
+    log {
+        output file /var/log/caddy/backend_access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}

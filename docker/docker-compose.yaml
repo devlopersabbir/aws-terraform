@@ -1,0 +1,53 @@
+services:
+  # 1. Caddy Reverse Proxy & SSL Manager
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: caddy_proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - APP_DOMAIN=${APP_DOMAIN}
+      - API_DOMAIN=${API_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+      - caddy_logs:/var/log/caddy
+    depends_on:
+      - frontend
+      - backend
+
+  # 2. Next.js / React Frontend Container
+  frontend:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.nextjs
+    container_name: app_frontend
+    restart: always
+    environment:
+      - NEXT_PUBLIC_API_URL=https://${API_DOMAIN}
+      - NODE_ENV=production
+    expose:
+      - "3000"
+
+  # 3. NestJS Backend Container
+  backend:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.nestjs
+    container_name: app_backend
+    restart: always
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    expose:
+      - "3000"
+
+volumes:
+  caddy_data:
+  caddy_config:
+  caddy_logs:
